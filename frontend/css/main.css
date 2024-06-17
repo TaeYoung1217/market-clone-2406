@@ -1,0 +1,73 @@
+main {
+  padding: 0 20px 79px 20px;
+  height: auto;
+  min-height: 100%;
+}
+.item-list {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 20px 0 20px 0;
+}
+
+.item-list__img {
+  width: 130px;
+  height: 130px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin-right: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.item-list__img img {
+  width: 100%;
+  object-fit: fill;
+}
+
+.item-list__info {
+  height: 130px;
+  width: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: start;
+}
+
+.item-list__info > div {
+  margin-top: 10px;
+}
+
+.item-list__info-meta {
+  font-size: x-small;
+  color: rgba(0, 0, 0, 0.3);
+}
+.item-list__info-price {
+  font-weight: bold;
+}
+
+.write-btn {
+  width: 60px;
+  height: 30px;
+  position: fixed;
+  bottom: 100px;
+  right: 20px;
+  padding: 5px 10px 5px 10px;
+  background-color: var(--button-primary);
+  font-weight: bold;
+  color: white;
+  border-radius: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: rgba(149, 157, 165, 0.4) 0px 8px 24px;
+  transition: all 0.01s ease-in-out;
+  text-decoration: none;
+}
+
+.write-btn:hover {
+  background-color: var(--button-hover);
+}
