@@ -14,7 +14,7 @@ const calcTime = (timestamp) => {
 const renderData = (data) => {
   const main = document.querySelector("main");
   data
-    .sort((a, b) => b.id - a.id)
+    .sort((a, b) => b.insertAt - a.insertAt)
     .forEach(async (obj) => {
       const div = document.createElement("div");
       div.className = "item-list";
@@ -41,7 +41,7 @@ const renderData = (data) => {
 
       const InfoPriceDiv = document.createElement("div");
       InfoPriceDiv.className = "item-list__info-price";
-      InfoPriceDiv.innerText = obj.price;
+      InfoPriceDiv.innerText = obj.price.toLocaleString("ko-KR") + "원";
 
       imgDiv.appendChild(img);
 

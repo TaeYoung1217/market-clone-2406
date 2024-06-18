@@ -13,6 +13,20 @@ con = sqlite3.connect("db.db", check_same_thread=False)
 cur = con.cursor()
 # DB와 상호작용하기 위한 커서 객체를 생성. 이 객체를 이용하여 DB에서 쿼리를 실행하고 결과를 가져올 수 있음
 
+cur.execute(
+    f"""
+        CREATE TABLE IF NOT EXISTS items(
+        id INTEGER PRIMARY KEY,
+        title TEXT NOT NULL,
+        image BLOB,
+        price INTEGER NOT NULL,
+        description TEXT ,
+        place TEXT NOT NULL,
+        insertAt INTEGER NOT NULL
+        )
+    """
+)
+
 app = FastAPI()
 
 
@@ -66,17 +80,40 @@ async def get_items():
 #     return "200"
 
 
+# 이미지만 가져오기
 @app.get("/images/{item_id}")
 async def get_image(item_id):
     cur = con.cursor()  # DB에 접근하기 위해 커서 객체 생성
-    imgae_bytes = cur.execute(
+    image_bytes = cur.execute(
         f"""
                               SELECT image FROM items WHERE id={item_id}
                               """  # 요청한 아이디와 맞는 이미지 값 가져오기
     ).fetchone()[
         0
     ]  # 한번 호출할때 하나의 row만 가져와서 [0]은 첫번째 column의 값 가져오기
-    return Response(content=bytes.fromhex(imgae_bytes))
+
+    return Response(content=bytes.fromhex(image_bytes), media_type="image/*")
+
+
+# 회원가입
+@app.post("/signup")
+def signup(
+    id: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    name: Annotated[str, Form()],
+    email: Annotated[str, Form()],
+):
+    try:
+        cur.execute(
+            f"""
+                    INSERT INTO users(`id`,`name`,`email`,`password`)
+                    VALUES('{id}','{name}','{email}','{password}')
+                    """
+        )
+        con.commit()
+        return "200"
+    except sqlite3.IntegrityError as e:
+        return "duplicated id"
 
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

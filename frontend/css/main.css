@@ -24,7 +24,8 @@ main {
 }
 .item-list__img img {
   width: 100%;
-  object-fit: fill;
+  height: 100%;
+  object-fit: cover;
 }
 
 .item-list__info {

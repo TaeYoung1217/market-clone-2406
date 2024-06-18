@@ -1,5 +1,5 @@
 const handleSubmitForm = async (event) => {
-  event.preventDefault();
+  event.preventDefault(); //redirect 방지
   const body = new FormData(form);
   body.append("insertAt", new Date().getTime());
 
