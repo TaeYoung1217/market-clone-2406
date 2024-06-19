@@ -1,9 +1,7 @@
-from fastapi import FastAPI, UploadFile, Form, Response, Depends
+from fastapi import FastAPI, UploadFile, Form, Response
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
-from fastapi_login import LoginManager
-from fastapi_login.exceptions import InvalidCredentialsException
-import hashlib
+
 
 from fastapi.staticfiles import StaticFiles
 from typing import Annotated
@@ -31,70 +29,6 @@ cur.execute(
 
 app = FastAPI()
 
-SECRET = "비밀키"
-manager = LoginManager(SECRET, "/login")
-
-
-# 회원가입
-@app.post("/signup")
-def signup(
-    id: Annotated[str, Form()],
-    password: Annotated[str, Form()],
-    name: Annotated[str, Form()],
-    email: Annotated[str, Form()],
-):
-    hashPassword = hashlib.sha256(password.encode()).hexdigest() #hashlib를 이용한 해시 암호화 후 16진수로 변환
-    
-    try:
-        cur.execute(
-            f"""
-                    INSERT INTO users(`id`,`name`,`email`,`password`)
-                    VALUES('{id}','{name}','{email}','{hashPassword}')
-                    """
-        )
-        con.commit()
-        return "200"
-    except sqlite3.IntegrityError as e:
-        return "duplicated id"
-
-
-@manager.user_loader()
-def query_user(data):  # 입력한 id가 DB에 존재하는지 확인
-    WHERE_STATEMENTS = f'id="{data}"'  # SQL 쿼리에 WHERE 절 뒤에 조건문을 문자열로 만듦
-    if type(data) == dict:  # 함수호출할때 인자가 dict 타입이라면
-        WHERE_STATEMENTS = f'id="{data['id']}"'  # data 안에 있는 id를 쿼리문에 삽입
-
-    con.row_factory = sqlite3.Row  # 컬럼명도 같이 가져오는 문법
-    cur = con.cursor()
-    user = cur.execute(
-        f"""
-                       SELECT * FROM users WHERE {WHERE_STATEMENTS}
-                       """
-    ).fetchone()  # id에 해당하는 row한개 전체를 가져옴
-    return user
-
-
-@app.post("/login")
-def login(id: Annotated[str, Form()], password: Annotated[str, Form()]):
-    user = query_user(id)
-    hashPassword = hashlib.sha256(password.encode()).hexdigest()  
-    #입력한 password를 hashlib를 이용하여 암호화 한 다음 DB에서 조회
-    
-    if not user:  # 해당하는 유저가 없을때
-        raise InvalidCredentialsException  # error 메세지 출력
-    elif (
-        
-        hashPassword != user["password"]
-    ):  # 비밀번호가 틀릴때 user row에서 password column에 해당하는 값을 가져와서 비교
-        # query_user 함수에서 row_factory 사용했기때문에 가능
-        raise InvalidCredentialsException  # error 메세지 출력
-
-    access_token = manager.create_access_token(
-        data={"sub": {"id": user["id"], "name": user["name"], "email": user["email"]}}
-    )  # access_token 발급하여 프론트엔드로 return
-
-    return access_token
-
 
 # 아이템 추가
 @app.post("/items")
@@ -104,7 +38,7 @@ async def create_item(
     price: Annotated[int, Form()],
     description: Annotated[str, Form()],
     place: Annotated[str, Form()],
-    insertAt: Annotated[int, Form()],user=Depends(manager)
+    insertAt: Annotated[int, Form()],
 ):
     image_bytes = await image.read()
     # UploadFile객체로 표현된 image를 read하여 ByteString으로 반환.
@@ -123,9 +57,7 @@ async def create_item(
 
 # 아이템 불러오기
 @app.get("/items")
-async def get_items(
-    user=Depends(manager),
-):  # user가 인증된 상태에서만 get 요청 가능하도록
+async def get_items():
     con.row_factory = sqlite3.Row  # 컬럼명도 같이 가져오는 문법
     cur = con.cursor()
     rows = cur.execute(
@@ -161,6 +93,27 @@ async def get_image(item_id):
     ]  # 한번 호출할때 하나의 row만 가져와서 [0]은 첫번째 column의 값 가져오기
 
     return Response(content=bytes.fromhex(image_bytes), media_type="image/*")
+
+
+# 회원가입
+@app.post("/signup")
+def signup(
+    id: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    name: Annotated[str, Form()],
+    email: Annotated[str, Form()],
+):
+    try:
+        cur.execute(
+            f"""
+                    INSERT INTO users(`id`,`name`,`email`,`password`)
+                    VALUES('{id}','{name}','{email}','{password}')
+                    """
+        )
+        con.commit()
+        return "200"
+    except sqlite3.IntegrityError as e:
+        return "duplicated id"
 
 
 app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
