@@ -15,6 +15,7 @@ const handleSubmit = async (event) => {
   const div = document.getElementById("info");
   const formData = new FormData(form); //입력 form에서 받아온 내용을 FormData객체로 받아옴
   const sha256Password = sha256(formData.get("password")); //받아온 password 해시암호화
+
   formData.set("password", sha256Password); //formData에 있는 패스워드를 암호화된 패스워드로 다시 값 설정
 
   if (checkPassword()) {
@@ -24,6 +25,7 @@ const handleSubmit = async (event) => {
     });
 
     const data = await res.json();
+
     if (data === "200") {
       alert("회원가입에 성공했습니다");
       window.location.pathname = "/login.html";
